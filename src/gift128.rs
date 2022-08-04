@@ -14,7 +14,7 @@ macro_rules! impl_gift {
         #[derive(Clone)]
         pub struct $name {
             /// Subkeys
-            k: [u64; $subkey_size],
+            k: [u32; $subkey_size],
         }
 
         impl BlockCipher for $name {}
@@ -25,7 +25,7 @@ macro_rules! impl_gift {
 
         impl fmt::Debug for $name {
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-                f.write_str(concat!stringify!($name), " { ... }")
+                f.write_str(concat!(stringify!($name), " { ... }"))
             }
         }
 
@@ -36,26 +36,24 @@ macro_rules! impl_gift {
             }
         }
 
-        impl ZeroizeOnDrop for $name {}
+        //impl ZeroizeOnDrop for $name {}
 
         cipher::impl_simple_block_encdec!(
             $name, U16, cipher, block,
             encrypt: {
                 let b = block.get_in();
-                let mut d1 = u64::from_be_bytes(b[0..8].try_into().unwrap());
-                let mut d2 = u64::from_be_bytes(b[8..16].try_into().unwrap());
+                let mut d1 = u32::from_be_bytes(b[0..8].try_into().unwrap());
+                let mut d2 = u32::from_be_bytes(b[8..16].try_into().unwrap());
 
                 d1 ^= cipher.k[0];
                 d2 ^= cipher.k[1];
 
-                BE::write_u64_into(&[d2, d1], block.get_out());
             }
             decrypt: {
-                let b = block.get_int();
-                let mut d1 = u64::from_be_bytes(b[0..8].try_into().unwrap());
-                let mut d2 = u64::from_be_bytes(b[8..16].try_into().unwrap());
+                let b = block.get_in();
+                let mut d1 = u32::from_be_bytes(b[0..8].try_into().unwrap());
+                let mut d2 = u32::from_be_bytes(b[8..16].try_into().unwrap());
 
-                BE::write_u64_into(&[d2, d1], block.get_out());
             }
         );
     };
