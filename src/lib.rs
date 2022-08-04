@@ -7,3 +7,4 @@ pub use cipher;
 mod consts;
 mod gift128;
 mod primitives;
+mod key_schedule;
