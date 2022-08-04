@@ -1,0 +1,16 @@
+[package]
+name = "gift"
+version = "0.0.1"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+cipher = "0.4.3"
+
+[dev-dependencies]
+cipher = { version = "0.4.3", features = ["dev"] }
+hex-literal = "0.3"
+
+[features]
+zeroize = ["cipher/zeroize"]
