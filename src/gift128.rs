@@ -1,13 +1,78 @@
-use core::fmt;
 use cipher::{
     consts::{U16, U24, U32},
-    AlgorithmName, BlockCipher, Key, KeyInit, KeySizeUser
+    AlgorithmName, BlockCipher, Key, KeyInit, KeySizeUser,
 };
+use core::fmt;
 
 #[cfg(feature = "zeroize")]
 use cipher::zeroize::{Zeroize, ZeroizeOnDrop};
 
-use crate::consts::{GIFT_S, GIFT_S_INV, GIFT_P, GIFT_P_INV, GIFT_RC};
+use crate::{consts::{GIFT_P, GIFT_P_INV, GIFT_RC, GIFT_S, GIFT_S_INV}, primitives::{u32big, swapmovesingle}, key_schedule::{key_update, rearrange_rkey_0, rearrange_rkey_1, rearrange_rkey_2, rearrange_rkey_3, key_triple_update_0, key_double_update_1, key_triple_update_2, key_triple_update_3, key_double_update_4, key_triple_update_1, key_double_update_2, key_double_update_3, key_triple_update_4}};
+
+fn precompute_rkeys(rkey: &mut [u32], key: &u32) {
+    rkey[0] = u32big(&(key.to_be_bytes()[3] as u32));
+    rkey[1] = u32big(&(key.to_be_bytes()[1] as u32));
+    rkey[2] = u32big(&(key.to_be_bytes()[2] as u32));
+    rkey[3] = u32big(&(key.to_be_bytes()[0] as u32));
+
+    for i in (0..16).step_by(2) {
+        rkey[i+4] = rkey[i+1];
+        rkey[i+5] = key_update(&rkey[i]);
+    }
+
+    for i in (0..20).step_by(10) {
+        rkey[i] = rearrange_rkey_0(&rkey[i]);
+        rkey[i+1] = rearrange_rkey_0(&rkey[i+1]);
+        rkey[i+2]	= rearrange_rkey_1(&rkey[i + 2]);
+		rkey[i+3]	= rearrange_rkey_1(&rkey[i + 3]);
+		rkey[i+4]	= rearrange_rkey_2(&rkey[i + 4]);
+		rkey[i+5]	= rearrange_rkey_2(&rkey[i + 5]);
+		rkey[i+6]	= rearrange_rkey_3(&rkey[i + 6]);
+		rkey[i+7]	= rearrange_rkey_3(&rkey[i + 7]);
+    }
+
+    for i in (20..80).step_by(10) {
+        rkey[i] = rkey[i-19];
+        rkey[i+1] = key_triple_update_0(&rkey[i-20]);
+		rkey[i+2] = key_double_update_1(&rkey[i-17]);
+		rkey[i+3] = key_triple_update_1(&rkey[i-18]);
+		rkey[i+4] = key_double_update_2(&rkey[i-15]);
+		rkey[i+5] = key_triple_update_2(&rkey[i-16]);
+		rkey[i+6] = key_double_update_3(&rkey[i-13]);
+		rkey[i+7] = key_triple_update_3(&rkey[i-14]);
+		rkey[i+8] = key_double_update_4(&rkey[i-11]);
+		rkey[i+9] = key_triple_update_4(&rkey[i-12]);
+		swapmovesingle(&mut rkey[i],  0x00003333, 16);
+		swapmovesingle(&mut rkey[i],  0x55554444, 1);
+		swapmovesingle(&mut rkey[i+1],  0x55551100, 1);
+    }
+}
+
+fn packing(state: &mut u32, input: &[u32]) {
+    let mut tmp = state.to_be_bytes();
+    state[0] =	(input[6] << 24)	| (input[7] << 16)	|
+				(input[14] << 8)	| input[15];
+	state[1] =	(input[4] << 24)	| (input[5] << 16)	|
+				(input[12] << 8)	| input[13];
+	state[2] =	(input[2] << 24)	| (input[3] << 16)	|
+				(input[10] << 8)	| input[11];
+	state[3] =	(input[0] << 24)	| (input[1] << 16)	|
+				(input[8] << 8)		| input[9];
+    swapmovesingle(&mut state[0], 0x0a0a0a0a, 3);
+    swapmovesingle(&mut state[0], 0x00cc00cc, 6);
+    swapmovesingle(&mut state[1], 0x0a0a0a0a, 3);
+    swapmovesingle(&mut state[1], 0x00cc00cc, 6);
+    swapmovesingle(&mut state[2], 0x0a0a0a0a, 3);
+    swapmovesingle(&mut state[2], 0x00cc00cc, 6);
+    swapmovesingle(&mut state[3], 0x0a0a0a0a, 3);
+    swapmovesingle(&mut state[3], 0x00cc00cc, 6);
+    SWAPMOVE(state[0], state[1], 0x000f000f, 4);
+    SWAPMOVE(state[0], state[2], 0x000f000f, 8);
+    SWAPMOVE(state[0], state[3], 0x000f000f, 12);
+    SWAPMOVE(state[1], state[2], 0x00f000f0, 4);
+    SWAPMOVE(state[1], state[3], 0x00f000f0, 8);
+    SWAPMOVE(state[2], state[3], 0x0f000f00, 4);
+}
 
 macro_rules! impl_gift {
     ($name:ident, $subkey_size:literal, $key_size:ty, $doc:literal) => {
