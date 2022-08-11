@@ -1,3 +1,6 @@
+pub(crate) const KEY_SIZE: u8 = 16;
+pub(crate) const BLOCK_SIZE: u8 = 16;
+
 pub(crate) const GIFT_S: [u8; 16] = [1, 10, 4, 12, 6, 15, 3, 9, 2, 13, 11, 7, 5, 0, 8, 14];
 pub(crate) const GIFT_S_INV: [u8; 16] = [13, 0, 8, 6, 2, 12, 4, 11, 14, 7, 1, 10, 3, 9, 15, 5];
 pub(crate) const GIFT_P: [u8; 128] = [
