@@ -1,7 +1,14 @@
 [package]
 name = "gift"
 version = "0.0.1"
+description = "Gift block cipher"
+authors = ["RustCrypto Developers", "Schmid7k"]
+license = "MIT OR Apache-2.0"
 edition = "2021"
+readme = "README.md"
+documentation = "https://docs.rs/gift"
+keywords = ["crypto", "gift", "block-cipher"]
+categories = ["cryptography", "no-std"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -10,7 +17,17 @@ cipher = "0.4.3"
 
 [dev-dependencies]
 cipher = { version = "0.4.3", features = ["dev"] }
-hex-literal = "0.3"
+criterion = "0.3.5"
+criterion-cycles-per-byte = "0.1.2"
+rand = "0.8.5"
 
 [features]
 zeroize = ["cipher/zeroize"]
+
+[package.metadata.docs.rs]
+rustdoc-args = ["--cfg", "docsrs"]
+
+[[bench]]
+name = "gift128enc"
+path = "benches/gift128enc.rs"
+harness = false
