@@ -13,6 +13,7 @@ use cipher::zeroize::{Zeroize, ZeroizeOnDrop};
 use crate::{consts::{GIFT_RC}, primitives::{u32big, swapmovesingle, packing, unpacking, quintuple_round, inv_quintuple_round}, key_schedule::{key_update, rearrange_rkey_0, rearrange_rkey_1, rearrange_rkey_2, rearrange_rkey_3, key_triple_update_0, key_double_update_1, key_triple_update_2, key_triple_update_3, key_double_update_4, key_triple_update_1, key_double_update_2, key_double_update_3, key_triple_update_4}};
 
 impl Gift128 {
+    #[inline]
     fn precompute_rkeys(key: &[u8]) -> Self {
         let mut rkey = [0u32; 80];
         rkey[0] = u32big(&(key[12..16]));

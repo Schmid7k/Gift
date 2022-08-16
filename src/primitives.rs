@@ -1,3 +1,4 @@
+#[inline]
 pub(crate) fn u32big(x: &[u8]) -> u32 {
     ((x[0] as u32) << 24) |
     ((x[1] as u32) << 16) |
@@ -5,58 +6,71 @@ pub(crate) fn u32big(x: &[u8]) -> u32 {
     (x[3] as u32)
 }
 
+#[inline]
 pub(crate) fn ror(x: &u32, y: &u32) -> u32 {
     ((*x) >> (*y)) | (*x << (32 - (*y)))
 }
 
+#[inline]
 pub(crate) fn byte_ror_2(x: &u32) -> u32 {
     (((x) >> 2) & 0x3f3f3f3f) | (((x) & 0x03030303) << 6)
 }
 
+#[inline]
 pub(crate) fn byte_ror_4(x: &u32) -> u32 {
     (((x) >> 4) & 0x0f0f0f0f) | (((x) & 0x0f0f0f0f) << 4)
 }
 
+#[inline]
 pub(crate) fn byte_ror_6(x: &u32) -> u32 {
     (((x) >> 6) & 0x03030303) | (((x) & 0x3f3f3f3f) << 2)
 }
 
+#[inline]
 pub(crate) fn half_ror_4(&x: &u32) -> u32 {
     (((x) >> 4) & 0x0fff0fff) | (((x) & 0x000f000f) << 12)
 }
 
+#[inline]
 pub(crate) fn half_ror_8(x: &u32) -> u32 {
     (((x) >> 8) & 0x00ff00ff) | (((x) & 0x00ff00ff) << 8)
 }
 
+#[inline]
 pub(crate) fn half_ror_12(&x: &u32) -> u32 {
     (((x) >> 12) & 0x000f000f) | (((x) & 0x0fff0fff) << 4)
 }
 
+#[inline]
 pub(crate) fn nibble_ror_1(x: &u32) -> u32 {
     (((x) >> 1) & 0x77777777) | (((x) & 0x11111111) << 3)
 }
 
+#[inline]
 pub(crate) fn nibble_ror_2(x: &u32) -> u32 {
     (((x) >> 2) & 0x33333333) | (((x) & 0x33333333) << 2)
 }
 
+#[inline]
 pub(crate) fn nibble_ror_3(&x: &u32) -> u32 {
     (((x) >> 3) & 0x11111111) | (((x) & 0x77777777) << 1)
 }
 
+#[inline]
 pub(crate) fn swapmove(a: &mut u32, b: &mut u32, mask: u32, n: u8) {
     let tmp = (*b ^ (*a >> n)) & mask;
     *b ^= tmp;
     *a ^= tmp << n;
 }
 
+#[inline]
 pub(crate) fn swapmovesingle(a: &mut u32, mask: u32, n: u8) {
     let tmp = (*a ^ (*a >> n)) & mask;
     *a ^= tmp;
     *a ^= tmp << n;
 }
 
+#[inline]
 pub(crate) fn sbox(s0: &mut u32, s1: &mut u32, s2: &mut u32, s3: &mut u32) {
     *s1 ^= *s0 & *s2;
     *s0 ^= *s1 & *s3;
@@ -67,6 +81,7 @@ pub(crate) fn sbox(s0: &mut u32, s1: &mut u32, s2: &mut u32, s3: &mut u32) {
     *s2 ^= *s0 & *s1;
 }
 
+#[inline]
 pub(crate) fn inv_sbox(s0: &mut u32, s1: &mut u32, s2: &mut u32, s3: &mut u32) {
     *s2 ^= *s3 & *s1;
     *s0 ^= 0xffffffff;
@@ -77,6 +92,7 @@ pub(crate) fn inv_sbox(s0: &mut u32, s1: &mut u32, s2: &mut u32, s3: &mut u32) {
     *s1 ^= *s3 & *s2;
 }
 
+#[inline]
 pub(crate) fn packing(state: &mut [u32], input: &[u8]) {
     let mut s0 =	((input[6] as u32) << 24)	| ((input[7] as u32) << 16)	|
 				((input[14] as u32) << 8)	| input[15] as u32;
@@ -103,6 +119,7 @@ pub(crate) fn packing(state: &mut [u32], input: &[u8]) {
     (state[0], state[1], state[2], state[3]) = (s0, s1, s2, s3);
 }
 
+#[inline]
 pub(crate) fn unpacking(state: &[u32], output: &mut [u8]) {
     let (mut s0, mut s1, mut s2, mut s3) = (state[0], state[1], state[2], state[3]);
 
@@ -130,6 +147,7 @@ pub(crate) fn unpacking(state: &[u32], output: &mut [u8]) {
 	output[14] = ((s0 >> 8) & 0xff) as u8; output[15] = (s0 & 0xff) as u8;
 }
 
+#[inline]
 pub(crate) fn quintuple_round(state: &mut [u32; 4], rkey: &[u32], rconst: &[u32]) {
     let mut s0 = state[0];
     let mut s1 = state[1];
@@ -176,6 +194,7 @@ pub(crate) fn quintuple_round(state: &mut [u32; 4], rkey: &[u32], rconst: &[u32]
     (state[0], state[1], state[2], state[3]) = (s0, s1, s2, s3);
 }
 
+#[inline]
 pub(crate) fn inv_quintuple_round(state: &mut [u32; 4], rkey: &[u32], rconst: &[u32]) {
     let mut s0 = state[0];
     let mut s1 = state[1];
